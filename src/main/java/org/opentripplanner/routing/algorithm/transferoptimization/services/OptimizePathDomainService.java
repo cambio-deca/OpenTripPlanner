@@ -1,11 +1,14 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.services;
 
+import static org.opentripplanner.framework.collection.ListUtils.first;
+
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.opentripplanner.framework.collection.ListUtils;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.path.RaptorStopNameResolver;
@@ -14,6 +17,7 @@ import org.opentripplanner.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedPath;
+import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferFilter;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.MinCostFilterChain;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.OptimizedPathTail;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TransferWaitTimeCostCalculator;
@@ -76,6 +80,9 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
   private final TransferWaitTimeCostCalculator waitTimeCostCalculator;
 
   @Nullable
+  private final TransferFilter<T> transferFilter;
+
+  @Nullable
   private final int[] stopBoardAlightCosts;
 
   private final double extraStopBoardAlightCostsFactor;
@@ -85,6 +92,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
     RaptorCostCalculator<T> costCalculator,
     RaptorSlackProvider slackProvider,
     @Nullable TransferWaitTimeCostCalculator waitTimeCostCalculator,
+    @Nullable TransferFilter<T> transferFilter,
     int[] stopBoardAlightCosts,
     double extraStopBoardAlightCostsFactor,
     MinCostFilterChain<OptimizedPathTail<T>> minCostFilterChain,
@@ -94,6 +102,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
     this.costCalculator = costCalculator;
     this.slackProvider = slackProvider;
     this.waitTimeCostCalculator = waitTimeCostCalculator;
+    this.transferFilter = transferFilter;
     this.stopBoardAlightCosts = stopBoardAlightCosts;
     this.extraStopBoardAlightCostsFactor = extraStopBoardAlightCostsFactor;
     this.minCostFilterChain = minCostFilterChain;
@@ -108,16 +117,21 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
       transferGenerator.findAllPossibleTransfers(transitLegs)
     );
 
-    // Combine transit legs and transfers
+    if (transferFilter != null) {
+      possibleTransfers =
+        transferFilter.filterTransfers(
+          first(transitLegs).getFromStopPosition(),
+          ListUtils.last(transitLegs).getToStopPosition(),
+          possibleTransfers
+        );
+    }
+
     var tails = findBestTransferOption(originalPath, transitLegs, possibleTransfers);
 
     return tails.stream().map(OptimizedPathTail::build).collect(Collectors.toSet());
   }
 
-  private static <T> T last(List<T> list) {
-    return list.get(list.size() - 1);
-  }
-
+  /** Combine transit legs and transfers */
   private Set<OptimizedPathTail<T>> findBestTransferOption(
     RaptorPath<T> originalPath,
     List<TransitPathLeg<T>> originalTransitLegs,
@@ -135,7 +149,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
         extraStopBoardAlightCostsFactor,
         stopNameTranslator
       )
-        .addTransitTail(last(originalTransitLegs))
+        .addTransitTail(ListUtils.last(originalTransitLegs))
     );
 
     // Cache accessArrivalTime, any event before the access-arrival-time is safe to ignore
@@ -154,7 +168,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
         // prune the transfers AFTER the transit-leg. The transfers are sorted on
         // arrival-time in descending order, so the earliest-arrival-time is the
         // last element of the list of transfers.
-        : last(possibleTransfers.get(i - 1)).to().time();
+        : ListUtils.last(possibleTransfers.get(i - 1)).to().time();
 
       // create a tailSelector for the tails produced in the last round and use it to filter them
       // based on the transfer-arrival-time and given filter

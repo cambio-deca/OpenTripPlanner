@@ -13,4 +13,12 @@ public class ListUtils {
   public static <T> List<T> combine(Collection<T>... lists) {
     return Arrays.stream(lists).flatMap(Collection::stream).toList();
   }
+
+  public static <T> T first(List<T> list) {
+    return list.get(0);
+  }
+
+  public static <T> T last(List<T> list) {
+    return list.get(list.size() - 1);
+  }
 }

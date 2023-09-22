@@ -28,6 +28,19 @@ public class PassThroughPoint {
     return IntStream.of(stops).collect(BitSet::new, BitSet::set, BitSet::or);
   }
 
+  /**
+   * Check is a stop index is included int the set of stops for this pass-through-point. The
+   * method is NOT optimized for performance - should not be used in routing.
+   */
+  public boolean contains(int stopIndex) {
+    for (int stop : stops) {
+      if (stop == stopIndex) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) return true;

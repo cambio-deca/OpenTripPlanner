@@ -5,9 +5,8 @@ import java.util.List;
 import org.opentripplanner.raptor._data.transit.TestTransfer;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
-import org.opentripplanner.routing.algorithm.transferoptimization.model.TripStopTime;
+import org.opentripplanner.routing.algorithm.transferoptimization._support.TripStopTimeUtils;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TripToTripTransfer;
 
 /**
@@ -78,8 +77,8 @@ public class TransferGeneratorDummy {
     var pathTransfer = fromStop == toStop ? null : TestTransfer.transfer(toStop, walkDuration);
 
     return new TripToTripTransfer<>(
-      departure(fromTrip, fromStop),
-      arrival(toTrip, toStop),
+      TripStopTimeUtils.departure(fromTrip, fromStop),
+      TripStopTimeUtils.arrival(toTrip, toStop),
       pathTransfer,
       null
     );
@@ -94,18 +93,10 @@ public class TransferGeneratorDummy {
     var pathTransfer = fromStop == toStop ? null : TestTransfer.transfer(toStop, walkDuration);
 
     return new TripToTripTransfer<>(
-      departure(builder.getFromTrip(), builder.getFromStopIndex()),
-      arrival(builder.getToTrip(), builder.getToStopIndex()),
+      TripStopTimeUtils.departure(builder.getFromTrip(), builder.getFromStopIndex()),
+      TripStopTimeUtils.arrival(builder.getToTrip(), builder.getToStopIndex()),
       pathTransfer,
       builder.build()
     );
-  }
-
-  private static <T extends RaptorTripSchedule> TripStopTime<T> departure(T trip, int stopIndex) {
-    return TripStopTime.departure(trip, trip.pattern().findStopPositionAfter(0, stopIndex));
-  }
-
-  private static <T extends RaptorTripSchedule> TripStopTime<T> arrival(T trip, int stopIndex) {
-    return TripStopTime.arrival(trip, trip.pattern().findStopPositionAfter(0, stopIndex));
   }
 }

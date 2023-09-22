@@ -293,6 +293,7 @@ public class OptimizePathDomainServiceTest implements RaptorTestConstants {
       SLACK_PROVIDER,
       waitTimeCalculator,
       null,
+      null,
       0.0,
       TransferOptimizedFilterFactory.filter(true, waitTimeCalculator != null),
       (new RaptorTestConstants() {})::stopIndexToName

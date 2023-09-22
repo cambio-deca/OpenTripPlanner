@@ -7,10 +7,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.Collection;
+import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.request.Optimization;
+import org.opentripplanner.raptor.api.request.PassThroughPoint;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
 import org.opentripplanner.raptor.rangeraptor.SystemErrDebugLogger;
@@ -23,9 +26,13 @@ public class RaptorRequestMapper {
   private final RouteRequest request;
   private final Collection<? extends RaptorAccessEgress> accessPaths;
   private final Collection<? extends RaptorAccessEgress> egressPaths;
+
+  @Nullable
+  private final List<PassThroughPoint> passThroughPoints;
+
   private final Duration searchWindowAccessSlack;
   private final long transitSearchTimeZeroEpocSecond;
-  private final boolean isMultiThreadedEnbled;
+  private final boolean isMultiThreadedEnabled;
   private final MeterRegistry meterRegistry;
 
   private RaptorRequestMapper(
@@ -33,14 +40,16 @@ public class RaptorRequestMapper {
     boolean isMultiThreaded,
     Collection<? extends RaptorAccessEgress> accessPaths,
     Collection<? extends RaptorAccessEgress> egressPaths,
+    List<PassThroughPoint> passThroughPoints,
     Duration searchWindowAccessSlack,
     long transitSearchTimeZeroEpocSecond,
     MeterRegistry meterRegistry
   ) {
     this.request = request;
-    this.isMultiThreadedEnbled = isMultiThreaded;
+    this.isMultiThreadedEnabled = isMultiThreaded;
     this.accessPaths = accessPaths;
     this.egressPaths = egressPaths;
+    this.passThroughPoints = passThroughPoints;
     this.searchWindowAccessSlack = searchWindowAccessSlack;
     this.transitSearchTimeZeroEpocSecond = transitSearchTimeZeroEpocSecond;
     this.meterRegistry = meterRegistry;
@@ -52,6 +61,7 @@ public class RaptorRequestMapper {
     boolean isMultiThreaded,
     Collection<? extends RaptorAccessEgress> accessPaths,
     Collection<? extends RaptorAccessEgress> egressPaths,
+    List<PassThroughPoint> passThroughPoints,
     Duration searchWindowAccessSlack,
     MeterRegistry meterRegistry
   ) {
@@ -60,6 +70,7 @@ public class RaptorRequestMapper {
       isMultiThreaded,
       accessPaths,
       egressPaths,
+      passThroughPoints,
       searchWindowAccessSlack,
       transitSearchTimeZero.toEpochSecond(),
       meterRegistry
@@ -106,6 +117,9 @@ public class RaptorRequestMapper {
       searchParams.numberOfAdditionalTransfers(preferences.transfer().maxAdditionalTransfers());
     }
     builder.withMultiCriteria(mcBuilder -> {
+      if (passThroughPoints != null) {
+        mcBuilder.withPassThroughPoints(passThroughPoints);
+      }
       preferences
         .transit()
         .raptor()
@@ -115,7 +129,7 @@ public class RaptorRequestMapper {
 
     for (Optimization optimization : preferences.transit().raptor().optimizations()) {
       if (optimization.is(PARALLEL)) {
-        if (isMultiThreadedEnbled) {
+        if (isMultiThreadedEnabled) {
           builder.enableOptimization(optimization);
         }
       } else {

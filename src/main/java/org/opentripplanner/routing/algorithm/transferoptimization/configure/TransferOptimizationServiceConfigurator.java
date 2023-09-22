@@ -1,16 +1,22 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.configure;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.function.IntFunction;
+import javax.annotation.Nullable;
 import org.opentripplanner.model.transfer.TransferService;
 import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.RaptorStopNameResolver;
+import org.opentripplanner.raptor.api.request.PassThroughPoint;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.routing.algorithm.transferoptimization.OptimizeTransferService;
+import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferFilter;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimizationParameters;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.MinCostFilterChain;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.MinSafeTransferTimeCalculator;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.OptimizedPathTail;
+import org.opentripplanner.routing.algorithm.transferoptimization.model.PassThroughPointFilter;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.TransferWaitTimeCostCalculator;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.OptimizePathDomainService;
 import org.opentripplanner.routing.algorithm.transferoptimization.services.TransferGenerator;
@@ -27,6 +33,10 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   private final RaptorStopNameResolver stopNameResolver;
   private final TransferService transferService;
   private final RaptorTransitDataProvider<T> transitDataProvider;
+
+  @Nullable
+  private final List<PassThroughPoint> passThroughPoints;
+
   private final int[] stopBoardAlightCosts;
   private final TransferOptimizationParameters config;
 
@@ -35,6 +45,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
     RaptorStopNameResolver stopNameResolver,
     TransferService transferService,
     RaptorTransitDataProvider<T> transitDataProvider,
+    List<PassThroughPoint> passThroughPoints,
     int[] stopBoardAlightCosts,
     TransferOptimizationParameters config
   ) {
@@ -42,6 +53,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
     this.stopNameResolver = stopNameResolver;
     this.transferService = transferService;
     this.transitDataProvider = transitDataProvider;
+    this.passThroughPoints = passThroughPoints;
     this.stopBoardAlightCosts = stopBoardAlightCosts;
     this.config = config;
   }
@@ -56,6 +68,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
     RaptorStopNameResolver stopNameResolver,
     TransferService transferService,
     RaptorTransitDataProvider<T> transitDataProvider,
+    @Nullable List<PassThroughPoint> passThroughPoints,
     int[] stopBoardAlightCosts,
     TransferOptimizationParameters config
   ) {
@@ -64,6 +77,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
       stopNameResolver,
       transferService,
       transitDataProvider,
+      passThroughPoints,
       stopBoardAlightCosts,
       config
     )
@@ -114,11 +128,20 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
       costCalculator,
       transitDataProvider.slackProvider(),
       transferWaitTimeCostCalculator,
+      createTransferFilter(),
       stopBoardAlightCosts,
       config.extraStopBoardAlightCostsFactor(),
       transferPointFilter,
       stopNameResolver
     );
+  }
+
+  private TransferFilter<T> createTransferFilter() {
+    if (passThroughPoints == null) {
+      return null;
+    } else {
+      return new PassThroughPointFilter<>(passThroughPoints);
+    }
   }
 
   private MinSafeTransferTimeCalculator<T> createMinSafeTxTimeService() {

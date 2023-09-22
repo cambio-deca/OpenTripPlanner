@@ -16,6 +16,7 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.api.path.RaptorPath;
+import org.opentripplanner.raptor.api.request.PassThroughPoint;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.routing.algorithm.mapping.RaptorPathToItineraryMapper;
 import org.opentripplanner.routing.algorithm.raptoradapter.router.street.AccessEgressPenaltyDecorator;
@@ -41,6 +42,8 @@ import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.street.search.TemporaryVerticesContainer;
+import org.opentripplanner.transit.model.framework.FeedScopedId;
+import org.opentripplanner.transit.model.site.RegularStop;
 
 public class TransitRouter {
 
@@ -114,6 +117,7 @@ public class TransitRouter {
     debugTimingAggregator.finishedPatternFiltering();
 
     var accessEgresses = fetchAccessEgresses();
+    List<PassThroughPoint> passThroughPoints = fetchPassThroughPoints();
 
     debugTimingAggregator.finishedAccessEgress(
       accessEgresses.getAccesses().size(),
@@ -127,6 +131,7 @@ public class TransitRouter {
       serverContext.raptorConfig().isMultiThreaded(),
       accessEgresses.getAccesses(),
       accessEgresses.getEgresses(),
+      passThroughPoints,
       accessEgresses.calculateMaxAccessTimePenalty(),
       serverContext.meterRegistry()
     );
@@ -149,6 +154,7 @@ public class TransitRouter {
             requestTransitDataProvider.stopNameResolver(),
             serverContext.transitService().getTransferService(),
             requestTransitDataProvider,
+            raptorRequest.multiCriteria().passThroughPoints().orElse(null),
             transitLayer.getStopBoardAlightCosts(),
             request.preferences().transfer().optimization()
           )
@@ -170,6 +176,13 @@ public class TransitRouter {
     debugTimingAggregator.finishedItineraryCreation();
 
     return new TransitRouterResult(itineraries, transitResponse.requestUsed().searchParams());
+  }
+
+  private List<PassThroughPoint> fetchPassThroughPoints() {
+    var passThroughStop = serverContext
+      .transitService()
+      .getRegularStop(new FeedScopedId("EN", "NSR:Quay:26319"));
+    return List.of(new PassThroughPoint(new int[] { passThroughStop.getIndex() }));
   }
 
   private AccessEgresses fetchAccessEgresses() {
