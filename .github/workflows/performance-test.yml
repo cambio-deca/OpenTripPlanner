@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dev-2.x
+      - otp2_raptor_ignore_neg_trip_times
 
 jobs:
   perf-test:
