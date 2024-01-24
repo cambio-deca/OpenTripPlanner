@@ -47,9 +47,15 @@ public class ServiceJourneyInfo {
       .getTimetabledPassingTime()
       .stream()
       .sorted(
+        // START NEW UNIPOL
         Comparator.comparing(timetabledPassingTime ->
-          stopPointIdToOrder.get(stopPointId(timetabledPassingTime))
-        )
+            stopPointIdToOrder.get(stopPointId(timetabledPassingTime)),
+          Comparator.nullsFirst(Comparator.naturalOrder()))
+        // END NEW UNIPOL
+
+        //Comparator.comparing(timetabledPassingTime ->
+        //stopPointIdToOrder.get(stopPointId(timetabledPassingTime))
+        //)
       )
       .map(timetabledPassingTime ->
         StopTimeAdaptor.of(timetabledPassingTime, stopFlexibility.get(timetabledPassingTime))
