@@ -17,6 +17,7 @@ import org.opentripplanner.transit.model.framework.LogInfo;
 public final class Agency extends AbstractTransitEntity<Agency, AgencyBuilder> implements LogInfo {
 
   private final String name;
+  private final String shortName;
   private final ZoneId timezone;
   private final String url;
   private final String lang;
@@ -29,8 +30,11 @@ public final class Agency extends AbstractTransitEntity<Agency, AgencyBuilder> i
     // Required fields
     String nameValue = (builder.getName() != null && !builder.getName().isBlank())
       ? builder.getName()
-      : "N/A"; // TODO UNIPOL: take short name if exists, otherwise N/A
+      : builder.getShortName() != null && !builder.getShortName().isBlank()
+        ? builder.getShortName()
+        : "N/A";
     this.name = assertHasValue(nameValue, "Missing mandatory name on Agency %s", builder.getId());
+    this.shortName = builder.getShortName();
     this.timezone =
       ZoneId.of(
         assertHasValue(
@@ -55,6 +59,11 @@ public final class Agency extends AbstractTransitEntity<Agency, AgencyBuilder> i
   @Nonnull
   public String getName() {
     return logName();
+  }
+
+  @Nullable
+  public String getShortName() {
+    return shortName;
   }
 
   @Nonnull

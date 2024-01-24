@@ -36,6 +36,7 @@ class AuthorityToAgencyMapper {
     AgencyBuilder target = Agency
       .of(idFactory.createId(source.getId()))
       .withName(source.getName().getValue())
+      .withShortName(source.getShortName().getValue())
       .withTimezone(timeZone);
 
     withOptional(

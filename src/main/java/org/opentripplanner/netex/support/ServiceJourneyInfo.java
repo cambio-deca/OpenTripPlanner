@@ -48,9 +48,10 @@ public class ServiceJourneyInfo {
       .stream()
       .sorted(
         // START NEW UNIPOL
-        Comparator.comparing(timetabledPassingTime ->
-            stopPointIdToOrder.get(stopPointId(timetabledPassingTime)),
-          Comparator.nullsFirst(Comparator.naturalOrder()))
+        Comparator.comparing(
+          timetabledPassingTime -> stopPointIdToOrder.get(stopPointId(timetabledPassingTime)),
+          Comparator.nullsFirst(Comparator.naturalOrder())
+        )
         // END NEW UNIPOL
 
         //Comparator.comparing(timetabledPassingTime ->
