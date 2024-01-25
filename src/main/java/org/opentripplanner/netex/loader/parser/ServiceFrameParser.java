@@ -29,6 +29,7 @@ import org.rutebanken.netex.model.ServiceLink;
 import org.rutebanken.netex.model.ServiceLinksInFrame_RelStructure;
 import org.rutebanken.netex.model.Service_VersionFrameStructure;
 import org.rutebanken.netex.model.StopAssignmentsInFrame_RelStructure;
+import org.rutebanken.netex.model.StopPlaceRefStructure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,7 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
 
   private final Map<String, String> quayIdByStopPointRef = new HashMap<>();
 
+  private final Map<String, String> mapStopPointToStopPlaceRef = new HashMap<>();
   private final Map<String, String> flexibleStopPlaceByStopPointRef = new HashMap<>();
 
   private final Collection<ServiceLink> serviceLinks = new ArrayList<>();
@@ -128,6 +130,7 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     index.networkById.addAll(networks);
     noticeParser.setResultOnIndex(index);
     index.quayIdByStopPointRef.addAll(quayIdByStopPointRef);
+    index.mapStopPointToStopPlaceRef.addAll(mapStopPointToStopPlaceRef);
     index.flexibleStopPlaceByStopPointRef.addAll(flexibleStopPlaceByStopPointRef);
     index.routeById.addAll(routes);
     index.serviceLinkById.addAll(serviceLinks);
@@ -148,6 +151,19 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
             "PassengerStopAssignment with empty quay ref is dropped. Assigment: {}",
             assignment.getId()
           );
+          // TODO UNIPOL
+          StopPlaceRefStructure stopPlaceStructure = assignment.getStopPlaceRef();
+          if (stopPlaceStructure == null) {
+            PASSENGER_STOP_ASSIGNMENT_LOGGER.info(
+              "PassengerStopAssignment with empty stop place. Assigment: {}",
+              assignment.getId()
+            );
+          } else {
+            String stopPlaceRef = stopPlaceStructure.getRef();
+            String stopPointRef = assignment.getScheduledStopPointRef().getValue().getRef();
+            mapStopPointToStopPlaceRef.put(stopPointRef, stopPlaceRef);
+          }
+          // TODO END UNIPOL
         } else {
           String quayRef = assignment.getQuayRef().getRef();
           String stopPointRef = assignment.getScheduledStopPointRef().getValue().getRef();

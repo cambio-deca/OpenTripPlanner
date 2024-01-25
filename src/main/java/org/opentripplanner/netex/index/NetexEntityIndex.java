@@ -90,6 +90,8 @@ public class NetexEntityIndex {
   public final HierarchicalVersionMapById<Quay> quayById;
   public final HierarchicalMap<String, String> flexibleStopPlaceByStopPointRef;
   public final HierarchicalMap<String, String> quayIdByStopPointRef;
+
+  public final HierarchicalMap<String, String> mapStopPointToStopPlaceRef;
   public final HierarchicalMapById<Route> routeById;
   public final HierarchicalMapById<ServiceJourney> serviceJourneyById;
   public final HierarchicalMapById<ServiceJourneyInterchange> serviceJourneyInterchangeById;
@@ -134,6 +136,7 @@ public class NetexEntityIndex {
     this.quayById = new HierarchicalVersionMapById<>();
     this.flexibleStopPlaceByStopPointRef = new HierarchicalMap<>();
     this.quayIdByStopPointRef = new HierarchicalMap<>();
+    this.mapStopPointToStopPlaceRef = new HierarchicalMap<>();
     this.routeById = new HierarchicalMapById<>();
     this.serviceJourneyById = new HierarchicalMapById<>();
     this.serviceLinkById = new HierarchicalMapById<>();
@@ -175,6 +178,7 @@ public class NetexEntityIndex {
     this.flexibleStopPlaceByStopPointRef =
       new HierarchicalMap<>(parent.flexibleStopPlaceByStopPointRef);
     this.quayIdByStopPointRef = new HierarchicalMap<>(parent.quayIdByStopPointRef);
+    this.mapStopPointToStopPlaceRef = new HierarchicalMap<>(parent.mapStopPointToStopPlaceRef);
     this.routeById = new HierarchicalMapById<>(parent.routeById);
     this.serviceJourneyById = new HierarchicalMapById<>(parent.serviceJourneyById);
     this.serviceLinkById = new HierarchicalMapById<>(parent.serviceLinkById);
@@ -321,6 +325,11 @@ public class NetexEntityIndex {
       @Override
       public ReadOnlyHierarchicalMap<String, String> getQuayIdByStopPointRef() {
         return quayIdByStopPointRef;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMap<String, String> getMapStopPointToStopPlaceRef() {
+        return mapStopPointToStopPlaceRef;
       }
 
       @Override

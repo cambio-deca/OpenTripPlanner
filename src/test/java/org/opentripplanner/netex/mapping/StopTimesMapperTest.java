@@ -49,8 +49,10 @@ public class StopTimesMapperTest {
       sample.getStopsById(),
       new EntityById<>(),
       new EntityById<>(),
+      new EntityById<>(),
       sample.getDestinationDisplayById(),
       sample.getQuayIdByStopPointRef(),
+      new HierarchicalMap<>(),
       new HierarchicalMap<>(),
       new HierarchicalMapById<>(),
       new HierarchicalMap<>()
@@ -139,8 +141,10 @@ public class StopTimesMapperTest {
       netexSample.getStopsById(),
       new EntityById<>(),
       new EntityById<>(),
+      new EntityById<>(),
       netexSample.getDestinationDisplayById(),
       netexSample.getQuayIdByStopPointRef(),
+      new HierarchicalMap<>(),
       new HierarchicalMap<>(),
       new HierarchicalMapById<>(),
       new HierarchicalMap<>()

@@ -68,6 +68,8 @@ public interface NetexEntityIndexReadOnlyView {
 
   ReadOnlyHierarchicalMap<String, String> getQuayIdByStopPointRef();
 
+  ReadOnlyHierarchicalMap<String, String> getMapStopPointToStopPlaceRef();
+
   ReadOnlyHierarchicalMap<String, String> getFlexibleStopPlaceByStopPointRef();
 
   ReadOnlyHierarchicalMapById<Route> getRouteById();

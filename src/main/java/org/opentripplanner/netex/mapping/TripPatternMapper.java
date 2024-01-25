@@ -26,6 +26,7 @@ import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.GroupStop;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -87,12 +88,14 @@ class TripPatternMapper {
     FeedScopedIdFactory idFactory,
     EntityById<Operator> operatorById,
     EntityById<RegularStop> stopById,
+    EntityById<Station> stationsOrStopPlaces,
     EntityById<AreaStop> areaStopById,
     EntityById<GroupStop> groupStopById,
     EntityById<org.opentripplanner.transit.model.network.Route> otpRouteById,
     ReadOnlyHierarchicalMap<String, Route> routeById,
     ReadOnlyHierarchicalMap<String, JourneyPattern_VersionStructure> journeyPatternById,
     ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef,
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlaceRef,
     ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef,
     ReadOnlyHierarchicalMap<String, DestinationDisplay> destinationDisplayById,
     ReadOnlyHierarchicalMap<String, ServiceJourney> serviceJourneyById,
@@ -126,10 +129,12 @@ class TripPatternMapper {
         issueStore,
         idFactory,
         stopById,
+        stationsOrStopPlaces,
         areaStopById,
         groupStopById,
         destinationDisplayById,
         quayIdByStopPointRef,
+        mapStopPointToStopPlaceRef,
         flexibleStopPlaceIdByStopPointRef,
         flexibleLineById,
         routeById

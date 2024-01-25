@@ -113,6 +113,7 @@ public final class Agency extends AbstractTransitEntity<Agency, AgencyBuilder> i
     return (
       getId().equals(other.getId()) &&
       Objects.equals(name, other.name) &&
+      Objects.equals(shortName, other.shortName) &&
       Objects.equals(timezone, other.timezone) &&
       Objects.equals(url, other.url) &&
       Objects.equals(lang, other.lang) &&

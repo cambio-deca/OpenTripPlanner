@@ -25,6 +25,7 @@ import org.opentripplanner.transit.model.framework.EntityById;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.GroupStop;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.rutebanken.netex.model.DestinationDisplay;
@@ -60,11 +61,15 @@ class StopTimesMapper {
 
   private final EntityById<RegularStop> stopsById;
 
+  private final EntityById<Station> stationsOrStopPlaces;
+
   private final EntityById<AreaStop> flexibleStopLocationsById;
 
   private final EntityById<GroupStop> groupStopById;
 
   private final ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef;
+
+  private final ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlaceRef;
 
   private final ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef;
 
@@ -80,10 +85,12 @@ class StopTimesMapper {
     DataImportIssueStore issueStore,
     FeedScopedIdFactory idFactory,
     EntityById<RegularStop> stopsById,
+    EntityById<Station> stationsOrStopPlaces,
     EntityById<AreaStop> areaStopById,
     EntityById<GroupStop> groupStopById,
     ReadOnlyHierarchicalMap<String, DestinationDisplay> destinationDisplayById,
     ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef,
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlaceRef,
     ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef,
     ReadOnlyHierarchicalMapById<FlexibleLine> flexibleLinesById,
     ReadOnlyHierarchicalMap<String, Route> routeById
@@ -92,9 +99,11 @@ class StopTimesMapper {
     this.idFactory = idFactory;
     this.destinationDisplayById = destinationDisplayById;
     this.stopsById = stopsById;
+    this.stationsOrStopPlaces = stationsOrStopPlaces;
     this.flexibleStopLocationsById = areaStopById;
     this.groupStopById = groupStopById;
     this.quayIdByStopPointRef = quayIdByStopPointRef;
+    this.mapStopPointToStopPlaceRef = mapStopPointToStopPlaceRef;
     this.flexibleStopPlaceIdByStopPointRef = flexibleStopPlaceIdByStopPointRef;
     this.flexibleLinesById = flexibleLinesById;
     this.routeByid = routeById;
@@ -368,23 +377,28 @@ class StopTimesMapper {
       return null;
     }
 
-    String stopPointRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
+    String scheduledStopPointRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
 
-    String stopId = quayIdByStopPointRef.lookup(stopPointRef);
-    String flexibleStopPlaceId = flexibleStopPlaceIdByStopPointRef.lookup(stopPointRef);
+    String stopPlaceId = mapStopPointToStopPlaceRef.lookup(scheduledStopPointRef);
+    String quayId = quayIdByStopPointRef.lookup(scheduledStopPointRef);
+    String flexibleStopPlaceId = flexibleStopPlaceIdByStopPointRef.lookup(scheduledStopPointRef);
 
-    if (stopId == null && flexibleStopPlaceId == null) {
+    // TODO: qua ci sono modifiche UNIPOL
+    if (quayId == null && flexibleStopPlaceId == null && stopPlaceId == null) {
       issueStore.add(
         "PassengerStopAssignmentNotFound",
         "No passengerStopAssignment found for %s",
-        stopPointRef
+        scheduledStopPointRef
       );
       return null;
     }
 
-    StopLocation stopLocation;
-    if (stopId != null) {
-      stopLocation = stopsById.get(idFactory.createId(stopId));
+    StopLocation stopLocation = null;
+    if (quayId != null) {
+      stopLocation = stopsById.get(idFactory.createId(quayId));
+    } else if (stopPlaceId != null) {
+      Station stopPlace = stationsOrStopPlaces.get(idFactory.createId(stopPlaceId));
+      stopLocation = RegularStop.of(idFactory.createId(stopPlaceId)).withCoordinate(stopPlace.getCoordinate()).build();
     } else {
       AreaStop areaStop = flexibleStopLocationsById.get(idFactory.createId(flexibleStopPlaceId));
       GroupStop groupStop = groupStopById.get(idFactory.createId(flexibleStopPlaceId));
@@ -398,7 +412,7 @@ class StopTimesMapper {
       issueStore.add(
         "StopPointInJourneyPatternMissingStopLocation",
         "No Quay or FlexibleStopPlace found for %s",
-        stopPointRef
+        scheduledStopPointRef
       );
     }
 

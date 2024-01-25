@@ -35,8 +35,8 @@ class AuthorityToAgencyMapper {
   Agency mapAuthorityToAgency(Authority source) {
     AgencyBuilder target = Agency
       .of(idFactory.createId(source.getId()))
-      .withName(source.getName().getValue())
-      .withShortName(source.getShortName().getValue())
+      .withName(source.getName() != null ? source.getName().getValue() : null)
+      .withShortName(source.getShortName() !=null ? source.getShortName().getValue() : null)
       .withTimezone(timeZone);
 
     withOptional(
