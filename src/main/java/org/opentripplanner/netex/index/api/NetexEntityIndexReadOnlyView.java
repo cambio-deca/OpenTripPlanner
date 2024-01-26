@@ -21,6 +21,7 @@ import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
 import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.Quay;
 import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.ScheduledStopPoint;
 import org.rutebanken.netex.model.ServiceJourney;
 import org.rutebanken.netex.model.ServiceJourneyInterchange;
 import org.rutebanken.netex.model.ServiceLink;
@@ -69,6 +70,8 @@ public interface NetexEntityIndexReadOnlyView {
   ReadOnlyHierarchicalMap<String, String> getQuayIdByStopPointRef();
 
   ReadOnlyHierarchicalMap<String, String> getMapStopPointToStopPlaceRef();
+  ReadOnlyHierarchicalMap<String, String> getMapStopPlaceToStopPointRef();
+  ReadOnlyHierarchicalMapById<ScheduledStopPoint> getScheduledStopPoints();
 
   ReadOnlyHierarchicalMap<String, String> getFlexibleStopPlaceByStopPointRef();
 

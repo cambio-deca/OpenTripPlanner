@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.api.Issue;
+import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMap;
+import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMapById;
 import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalVersionMapById;
 import org.opentripplanner.netex.issues.StopPlaceWithoutQuays;
 import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
@@ -27,8 +29,11 @@ import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.service.StopModelBuilder;
 import org.rutebanken.netex.model.Quay;
 import org.rutebanken.netex.model.Quays_RelStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.SimplePoint_VersionStructure;
 import org.rutebanken.netex.model.StopPlace;
 import org.rutebanken.netex.model.TariffZoneRef;
+import org.rutebanken.netex.model.Version_VersionStructure;
 
 /**
  * This maps a NeTEx StopPlace and its child quays to and OTP parent stop and child stops. NeTEx
@@ -88,12 +93,24 @@ class StopAndStationMapper {
   /**
    * @param stopPlaces all stop places including multiple versions of each.
    */
-  void mapParentAndChildStops(final Collection<StopPlace> stopPlaces) {
+  void mapParentAndChildStops(
+    final Collection<StopPlace> stopPlaces,
+    ReadOnlyHierarchicalMap<String, String> stopPointsMap,
+    ReadOnlyHierarchicalMapById<ScheduledStopPoint> scheduledStopPoints
+  ) {
     // Prioritize StopPlace versions. Highest priority first.
     // TODO OTP2 - This should pushed up into the ReadOnlyHierarchicalVersionMapById as part of
     //           - Issue: Netex import resolve version for all entities , not just stops #2781
     List<StopPlace> stopPlaceAllVersions = sortStopPlacesByValidityAndVersionDesc(stopPlaces);
     StopPlace selectedStopPlace = first(stopPlaceAllVersions);
+
+    String stopPointId = stopPointsMap.lookup(selectedStopPlace.getId());
+    ScheduledStopPoint scheduledStopPoint = scheduledStopPoints.lookup(stopPointId);
+    SimplePoint_VersionStructure simplePoint = new SimplePoint_VersionStructure();
+    if (scheduledStopPoint != null && scheduledStopPoint.getLocation() != null) {
+      simplePoint.setLocation(scheduledStopPoint.getLocation());
+      selectedStopPlace.setCentroid(simplePoint);
+    }
 
     Station station = mapStopPlaceAllVersionsToStation(selectedStopPlace);
     Collection<FareZone> fareZones = mapTariffZones(selectedStopPlace);

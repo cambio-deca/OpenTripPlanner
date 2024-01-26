@@ -25,6 +25,8 @@ import org.rutebanken.netex.model.NetworksInFrame_RelStructure;
 import org.rutebanken.netex.model.PassengerStopAssignment;
 import org.rutebanken.netex.model.Route;
 import org.rutebanken.netex.model.RoutesInFrame_RelStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
 import org.rutebanken.netex.model.ServiceLink;
 import org.rutebanken.netex.model.ServiceLinksInFrame_RelStructure;
 import org.rutebanken.netex.model.Service_VersionFrameStructure;
@@ -59,6 +61,8 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
   private final Map<String, String> quayIdByStopPointRef = new HashMap<>();
 
   private final Map<String, String> mapStopPointToStopPlaceRef = new HashMap<>();
+  private final Map<String, String> mapStopPlaceToStopPointRef = new HashMap<>();
+  private final Collection<ScheduledStopPoint> scheduledStopPoints = new ArrayList<>();
   private final Map<String, String> flexibleStopPlaceByStopPointRef = new HashMap<>();
 
   private final Collection<ServiceLink> serviceLinks = new ArrayList<>();
@@ -75,7 +79,7 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
 
   @Override
   void parse(Service_VersionFrameStructure frame) {
-    parseStopAssignments(frame.getStopAssignments());
+    parseStopAssignments(frame.getStopAssignments(), frame.getScheduledStopPoints());
     parseRoutes(frame.getRoutes());
     parseNetwork(frame.getNetwork());
     parseGroupOfLines(frame.getGroupsOfLines());
@@ -125,12 +129,14 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     index.destinationDisplayById.addAll(destinationDisplays);
     index.groupOfLinesById.addAll(groupOfLines);
     index.journeyPatternsById.addAll(journeyPatterns);
+    index.scheduledStopPoints.addAll(scheduledStopPoints);
     index.flexibleLineByid.addAll(flexibleLines);
     index.lineById.addAll(lines);
     index.networkById.addAll(networks);
     noticeParser.setResultOnIndex(index);
     index.quayIdByStopPointRef.addAll(quayIdByStopPointRef);
     index.mapStopPointToStopPlaceRef.addAll(mapStopPointToStopPlaceRef);
+    index.mapStopPlaceToStopPointRef.addAll(mapStopPlaceToStopPointRef);
     index.flexibleStopPlaceByStopPointRef.addAll(flexibleStopPlaceByStopPointRef);
     index.routeById.addAll(routes);
     index.serviceLinkById.addAll(serviceLinks);
@@ -139,8 +145,12 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     index.networkIdByGroupOfLineId.addAll(networkIdByGroupOfLineId);
   }
 
-  private void parseStopAssignments(StopAssignmentsInFrame_RelStructure stopAssignments) {
+  private void parseStopAssignments(
+    StopAssignmentsInFrame_RelStructure stopAssignments,
+    ScheduledStopPointsInFrame_RelStructure stopPoints
+  ) {
     if (stopAssignments == null) return;
+    scheduledStopPoints.addAll(stopPoints.getScheduledStopPoint());
 
     for (JAXBElement<?> stopAssignment : stopAssignments.getStopAssignment()) {
       if (stopAssignment.getValue() instanceof PassengerStopAssignment) {
@@ -161,13 +171,19 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
           } else {
             String stopPlaceRef = stopPlaceStructure.getRef();
             String stopPointRef = assignment.getScheduledStopPointRef().getValue().getRef();
+
             mapStopPointToStopPlaceRef.put(stopPointRef, stopPlaceRef);
+            mapStopPlaceToStopPointRef.put(stopPlaceRef, stopPointRef);
           }
           // TODO END UNIPOL
         } else {
+          StopPlaceRefStructure stopPlaceRef = assignment.getStopPlaceRef();
           String quayRef = assignment.getQuayRef().getRef();
           String stopPointRef = assignment.getScheduledStopPointRef().getValue().getRef();
           quayIdByStopPointRef.put(stopPointRef, quayRef);
+          if (stopPlaceRef != null) {
+            mapStopPlaceToStopPointRef.put(stopPlaceRef.getRef(), stopPointRef);
+          }
         }
       } else if (stopAssignment.getValue() instanceof FlexibleStopAssignment) {
         if (OTPFeature.FlexRouting.isOn()) {

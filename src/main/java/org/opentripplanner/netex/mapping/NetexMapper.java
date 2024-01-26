@@ -312,7 +312,11 @@ public class NetexMapper {
       Collection<StopPlace> stopPlaceAllVersions = currentNetexIndex
         .getStopPlaceById()
         .lookup(stopPlaceId);
-      stopMapper.mapParentAndChildStops(stopPlaceAllVersions);
+      stopMapper.mapParentAndChildStops(
+        stopPlaceAllVersions,
+        currentNetexIndex.getMapStopPlaceToStopPointRef(),
+        currentNetexIndex.getScheduledStopPoints()
+      );
     }
     transitBuilder.getStops().addAll(stopMapper.resultStops);
     transitBuilder.getStations().addAll(stopMapper.resultStations);

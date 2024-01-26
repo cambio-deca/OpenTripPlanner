@@ -216,7 +216,7 @@ class StopTimesMapper {
   }
 
   @Nullable
-  private static StopPointInJourneyPattern findStopPoint(
+  public static StopPointInJourneyPattern findStopPoint(
     String pointInJourneyPatterRef,
     JourneyPattern_VersionStructure journeyPattern
   ) {
@@ -377,7 +377,10 @@ class StopTimesMapper {
       return null;
     }
 
-    String scheduledStopPointRef = stopPointInJourneyPattern.getScheduledStopPointRef().getValue().getRef();
+    String scheduledStopPointRef = stopPointInJourneyPattern
+      .getScheduledStopPointRef()
+      .getValue()
+      .getRef();
 
     String stopPlaceId = mapStopPointToStopPlaceRef.lookup(scheduledStopPointRef);
     String quayId = quayIdByStopPointRef.lookup(scheduledStopPointRef);
@@ -398,7 +401,11 @@ class StopTimesMapper {
       stopLocation = stopsById.get(idFactory.createId(quayId));
     } else if (stopPlaceId != null) {
       Station stopPlace = stationsOrStopPlaces.get(idFactory.createId(stopPlaceId));
-      stopLocation = RegularStop.of(idFactory.createId(stopPlaceId)).withCoordinate(stopPlace.getCoordinate()).build();
+      stopLocation =
+        RegularStop
+          .of(idFactory.createId(stopPlaceId))
+          .withCoordinate(stopPlace.getCoordinate())
+          .build();
     } else {
       AreaStop areaStop = flexibleStopLocationsById.get(idFactory.createId(flexibleStopPlaceId));
       GroupStop groupStop = groupStopById.get(idFactory.createId(flexibleStopPlaceId));

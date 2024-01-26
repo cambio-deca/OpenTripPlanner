@@ -9,12 +9,18 @@ import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMap;
+import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMapById;
+import org.opentripplanner.netex.index.hierarchy.HierarchicalMap;
+import org.opentripplanner.netex.index.hierarchy.HierarchicalMapById;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalVersionMapById;
 import org.opentripplanner.transit.model.basic.Accessibility;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -31,6 +37,7 @@ import org.rutebanken.netex.model.LocationStructure;
 import org.rutebanken.netex.model.MultilingualString;
 import org.rutebanken.netex.model.Quay;
 import org.rutebanken.netex.model.Quays_RelStructure;
+import org.rutebanken.netex.model.ScheduledStopPoint;
 import org.rutebanken.netex.model.SimplePoint_VersionStructure;
 import org.rutebanken.netex.model.StopPlace;
 import org.rutebanken.netex.model.VehicleModeEnumeration;
@@ -49,6 +56,8 @@ public class StopAndStationMapperTest {
       13.186816,
       VehicleModeEnumeration.BUS
     );
+    ReadOnlyHierarchicalMapById<ScheduledStopPoint> scheduledStopPoints = new HierarchicalMapById<>();
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlace = new HierarchicalMap<>();
 
     // Create on quay with access, one without, and one with NULL
     var quay1 = createQuay("ST:Quay:1", "Quay1", "1", 55.706063, 13.186708, "a");
@@ -78,7 +87,11 @@ public class StopAndStationMapperTest {
 
     StopAndStationMapper stopAndStationMapper = createStopAndStationMapper(StopModel.of());
 
-    stopAndStationMapper.mapParentAndChildStops(List.of(stopPlace));
+    stopAndStationMapper.mapParentAndChildStops(
+      List.of(stopPlace),
+      mapStopPointToStopPlace,
+      scheduledStopPoints
+    );
 
     var stops = stopAndStationMapper.resultStops;
 
@@ -96,7 +109,11 @@ public class StopAndStationMapperTest {
     // Add quay with no AccessibilityAssessment, then it should take default from stopPlace
     stopPlace.getQuays().withQuayRefOrQuay(quay4);
 
-    stopAndStationMapper.mapParentAndChildStops(List.of(stopPlace));
+    stopAndStationMapper.mapParentAndChildStops(
+      List.of(stopPlace),
+      mapStopPointToStopPlace,
+      scheduledStopPoints
+    );
 
     assertEquals(4, stops.size(), "stops.size must be 4 found " + stops.size());
     assertWheelchairAccessibility("ST:Quay:4", Accessibility.POSSIBLE, stops);
@@ -105,6 +122,8 @@ public class StopAndStationMapperTest {
   @Test
   public void mapStopPlaceAndQuays() {
     Collection<StopPlace> stopPlaces = new ArrayList<>();
+    ReadOnlyHierarchicalMapById<ScheduledStopPoint> scheduledStopPoints = new HierarchicalMapById<>();
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlace = new HierarchicalMap<>();
 
     StopPlace stopPlaceNew = createStopPlace(
       "NSR:StopPlace:1",
@@ -159,7 +178,7 @@ public class StopAndStationMapperTest {
       false
     );
 
-    stopMapper.mapParentAndChildStops(stopPlaces);
+    stopMapper.mapParentAndChildStops(stopPlaces, mapStopPointToStopPlace, scheduledStopPoints);
 
     Collection<RegularStop> stops = stopMapper.resultStops;
     Collection<Station> stations = stopMapper.resultStations;
@@ -205,6 +224,9 @@ public class StopAndStationMapperTest {
   @CsvSource(value = { "true", "false" })
   public void testMapIsolatedStopPlace(boolean isolated) {
     Collection<StopPlace> stopPlaces = new ArrayList<>();
+    ReadOnlyHierarchicalMapById<ScheduledStopPoint> scheduledStopPoints = new HierarchicalMapById<>();
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlace = new HierarchicalMap<>();
+
     StopPlace stopPlace;
     stopPlace =
       createStopPlace(
@@ -229,7 +251,7 @@ public class StopAndStationMapperTest {
       isolated
     );
 
-    stopMapper.mapParentAndChildStops(stopPlaces);
+    stopMapper.mapParentAndChildStops(stopPlaces, mapStopPointToStopPlace, scheduledStopPoints);
     Collection<Station> stations = stopMapper.resultStations;
 
     assertEquals(1, stations.size());
@@ -242,6 +264,8 @@ public class StopAndStationMapperTest {
 
   @Test
   public void testDuplicateStopIndices() {
+    ReadOnlyHierarchicalMapById<ScheduledStopPoint> scheduledStopPoints = new HierarchicalMapById<>();
+    ReadOnlyHierarchicalMap<String, String> mapStopPointToStopPlace = new HierarchicalMap<>();
     StopLocation.initIndexCounter(0);
     var stopPlace = createStopPlace(
       "ST:StopPlace:1",
@@ -260,11 +284,19 @@ public class StopAndStationMapperTest {
     StopModelBuilder stopModelBuilder = StopModel.of();
 
     StopAndStationMapper stopAndStationMapper = createStopAndStationMapper(stopModelBuilder);
-    stopAndStationMapper.mapParentAndChildStops(List.of(stopPlace));
+    stopAndStationMapper.mapParentAndChildStops(
+      List.of(stopPlace),
+      mapStopPointToStopPlace,
+      scheduledStopPoints
+    );
     stopModelBuilder.regularStopsById().addAll(stopAndStationMapper.resultStops);
 
     StopAndStationMapper stopAndStationMapper2 = createStopAndStationMapper(stopModelBuilder);
-    stopAndStationMapper2.mapParentAndChildStops(List.of(stopPlace));
+    stopAndStationMapper2.mapParentAndChildStops(
+      List.of(stopPlace),
+      mapStopPointToStopPlace,
+      scheduledStopPoints
+    );
     stopModelBuilder.regularStopsById().addAll(stopAndStationMapper2.resultStops);
 
     assertEquals(1, stopModelBuilder.regularStopsById().size());

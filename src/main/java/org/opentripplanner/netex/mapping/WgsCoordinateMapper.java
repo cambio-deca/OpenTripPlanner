@@ -24,6 +24,9 @@ class WgsCoordinateMapper {
 
     // This should not happen
     if (loc.getLongitude() == null || loc.getLatitude() == null) {
+      if (loc.getPos() == null) {
+        throw new IllegalArgumentException("Coordinate is not valid: " + loc);
+      }
       List<Double> coordinates = loc.getPos().getValue();
       if (coordinates.size() != 2) {
         throw new IllegalArgumentException("Coordinate is not valid: " + loc);

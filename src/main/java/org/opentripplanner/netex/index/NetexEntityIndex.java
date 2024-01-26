@@ -30,6 +30,9 @@ import org.rutebanken.netex.model.OperatingPeriod_VersionStructure;
 import org.rutebanken.netex.model.Operator;
 import org.rutebanken.netex.model.Quay;
 import org.rutebanken.netex.model.Route;
+import org.rutebanken.netex.model.ScheduledStopPoint;
+import org.rutebanken.netex.model.ScheduledStopPoint_VersionStructure;
+import org.rutebanken.netex.model.ScheduledStopPointsInFrame_RelStructure;
 import org.rutebanken.netex.model.ServiceJourney;
 import org.rutebanken.netex.model.ServiceJourneyInterchange;
 import org.rutebanken.netex.model.ServiceLink;
@@ -76,6 +79,7 @@ public class NetexEntityIndex {
   public final HierarchicalMapById<DestinationDisplay> destinationDisplayById;
   public final HierarchicalMapById<FlexibleStopPlace> flexibleStopPlaceById;
   public final HierarchicalMapById<GroupOfLines> groupOfLinesById;
+  public final HierarchicalMapById<ScheduledStopPoint> scheduledStopPoints;
   public final HierarchicalMapById<GroupOfStopPlaces> groupOfStopPlacesById;
   public final HierarchicalMapById<JourneyPattern_VersionStructure> journeyPatternsById;
   public final HierarchicalMapById<FlexibleLine> flexibleLineByid;
@@ -92,6 +96,8 @@ public class NetexEntityIndex {
   public final HierarchicalMap<String, String> quayIdByStopPointRef;
 
   public final HierarchicalMap<String, String> mapStopPointToStopPlaceRef;
+  public final HierarchicalMap<String, String> mapStopPlaceToStopPointRef;
+
   public final HierarchicalMapById<Route> routeById;
   public final HierarchicalMapById<ServiceJourney> serviceJourneyById;
   public final HierarchicalMapById<ServiceJourneyInterchange> serviceJourneyInterchangeById;
@@ -137,6 +143,8 @@ public class NetexEntityIndex {
     this.flexibleStopPlaceByStopPointRef = new HierarchicalMap<>();
     this.quayIdByStopPointRef = new HierarchicalMap<>();
     this.mapStopPointToStopPlaceRef = new HierarchicalMap<>();
+    this.mapStopPlaceToStopPointRef = new HierarchicalMap<>();
+    this.scheduledStopPoints = new HierarchicalMapById<>();
     this.routeById = new HierarchicalMapById<>();
     this.serviceJourneyById = new HierarchicalMapById<>();
     this.serviceLinkById = new HierarchicalMapById<>();
@@ -179,6 +187,8 @@ public class NetexEntityIndex {
       new HierarchicalMap<>(parent.flexibleStopPlaceByStopPointRef);
     this.quayIdByStopPointRef = new HierarchicalMap<>(parent.quayIdByStopPointRef);
     this.mapStopPointToStopPlaceRef = new HierarchicalMap<>(parent.mapStopPointToStopPlaceRef);
+    this.mapStopPlaceToStopPointRef = new HierarchicalMap<>(parent.mapStopPlaceToStopPointRef);
+    this.scheduledStopPoints = new HierarchicalMapById<>(parent.scheduledStopPoints);
     this.routeById = new HierarchicalMapById<>(parent.routeById);
     this.serviceJourneyById = new HierarchicalMapById<>(parent.serviceJourneyById);
     this.serviceLinkById = new HierarchicalMapById<>(parent.serviceLinkById);
@@ -330,6 +340,16 @@ public class NetexEntityIndex {
       @Override
       public ReadOnlyHierarchicalMap<String, String> getMapStopPointToStopPlaceRef() {
         return mapStopPointToStopPlaceRef;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMap<String, String> getMapStopPlaceToStopPointRef() {
+        return mapStopPlaceToStopPointRef;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMapById<ScheduledStopPoint> getScheduledStopPoints() {
+        return scheduledStopPoints;
       }
 
       @Override

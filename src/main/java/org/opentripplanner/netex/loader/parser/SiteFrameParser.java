@@ -90,9 +90,7 @@ class SiteFrameParser extends NetexParser<Site_VersionFrameStructure> {
   private void parseStopPlaces(Collection<StopPlace> stopPlaceList) {
     for (StopPlace stopPlace : stopPlaceList) {
       // TODO UNIPOL
-      if (stopPlace.getCentroid() == null) {
-        continue;
-      }
+
       // TODO END UNIPOL
 
       if (isMultiModalStopPlace(stopPlace)) {
