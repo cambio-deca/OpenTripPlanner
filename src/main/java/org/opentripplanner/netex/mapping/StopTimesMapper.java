@@ -10,6 +10,7 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.i18n.I18NString;
@@ -401,11 +402,11 @@ class StopTimesMapper {
       stopLocation = stopsById.get(idFactory.createId(quayId));
     } else if (stopPlaceId != null) {
       Station stopPlace = stationsOrStopPlaces.get(idFactory.createId(stopPlaceId));
-      stopLocation =
-        RegularStop
+      Optional<StopLocation> childStop = stopPlace.getChildStops().stream().findFirst();
+      stopLocation = childStop.orElseGet(() -> RegularStop
           .of(idFactory.createId(stopPlaceId))
           .withCoordinate(stopPlace.getCoordinate())
-          .build();
+          .build());
     } else {
       AreaStop areaStop = flexibleStopLocationsById.get(idFactory.createId(flexibleStopPlaceId));
       GroupStop groupStop = groupStopById.get(idFactory.createId(flexibleStopPlaceId));
